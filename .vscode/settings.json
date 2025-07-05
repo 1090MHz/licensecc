@@ -1,0 +1,7 @@
+{
+  "iis.configDir": "",
+  "cmake.useCMakePresets": "auto",
+  "cmake.configureOnOpen": false,
+  "cmake.configureOnEdit": false,
+  "cmake.automaticReconfigure": false
+}

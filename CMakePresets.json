@@ -1,0 +1,57 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "vcpkg-static",
+            "displayName": "vcpkg Static Libraries",
+            "description": "Configure with vcpkg static libraries",
+            "generator": "Visual Studio 17 2022",
+            "architecture": "x64",
+            "binaryDir": "${sourceDir}/build",
+            "toolchainFile": "C:/opt/vcpkg/scripts/buildsystems/vcpkg.cmake",
+            "cacheVariables": {
+                "VCPKG_TARGET_TRIPLET": "x64-windows-static",
+                "VCPKG_ROOT": "C:/opt/vcpkg",
+                "CMAKE_PREFIX_PATH": "C:/opt/vcpkg/installed/x64-windows-static",
+                "STATIC_RUNTIME": "ON",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install"
+            },
+            "environment": {
+                "VCPKG_ROOT": "C:/opt/vcpkg",
+                "VCPKG_DEFAULT_TRIPLET": "x64-windows-static"
+            }
+        },
+        {
+            "name": "vcpkg-dynamic",
+            "displayName": "vcpkg Dynamic Libraries",
+            "description": "Configure with vcpkg dynamic libraries",
+            "generator": "Visual Studio 17 2022",
+            "architecture": "x64",
+            "binaryDir": "${sourceDir}/build-dynamic",
+            "toolchainFile": "C:/opt/vcpkg/scripts/buildsystems/vcpkg.cmake",
+            "cacheVariables": {
+                "VCPKG_TARGET_TRIPLET": "x64-windows",
+                "VCPKG_ROOT": "C:/opt/vcpkg",
+                "CMAKE_PREFIX_PATH": "C:/opt/vcpkg/installed/x64-windows",
+                "STATIC_RUNTIME": "OFF",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install"
+            },
+            "environment": {
+                "VCPKG_ROOT": "C:/opt/vcpkg",
+                "VCPKG_DEFAULT_TRIPLET": "x64-windows"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "vcpkg-static-release",
+            "configurePreset": "vcpkg-static",
+            "configuration": "Release"
+        },
+        {
+            "name": "vcpkg-static-debug",
+            "configurePreset": "vcpkg-static",
+            "configuration": "Debug"
+        }
+    ]
+}
