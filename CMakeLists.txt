@@ -17,6 +17,10 @@ IF(NOT LCC_PROJECTS_BASE_DIR)
 ENDIF(NOT LCC_PROJECTS_BASE_DIR)
 
 cmake_policy(SET CMP0048 NEW)
+# Use legacy FindBoost.cmake behavior instead of requiring BoostConfig.cmake
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 OLD)
+endif()
 #cmake_policy(SET CMP0091 NEW)
 project (licensecc 
 			VERSION 2.1.0
