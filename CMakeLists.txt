@@ -103,12 +103,9 @@ else(UNIX)
 		include(target_arch)
 		target_architecture( TARGET_ARCHITECTURE )
 		message(STATUS "architecture detected: ${TARGET_ARCHITECTURE}")
-		#cmake > 3.15 handle the /MD flag more nicely than this
+		# Modern CMake (3.15+) handles runtime library via CMAKE_MSVC_RUNTIME_LIBRARY
+		# Set Boost to use static runtime if we're using static runtime
 		if(STATIC_RUNTIME)
-		    message(STATUS "Static runtime ${STATIC_RUNTIME}")
-			string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
-			string(REPLACE "/MDd" "/MTd" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-			#list(APPEND CMAKE_CXX_FLAGS_DEBUG "/MTd")
 			SET(Boost_USE_STATIC_RUNTIME ON)
 		endif(STATIC_RUNTIME)
 		add_definitions("/D _CRT_SECURE_NO_WARNINGS")
@@ -162,7 +159,14 @@ if(WIN32 AND "x${CMAKE_CXX_COMPILER_ARCHITECTURE_ID}" STREQUAL "x")
     endif()
 	    message(STATUS "Compiler architecture: ${CMAKE_CXX_COMPILER_ARCHITECTURE_ID}")
 endif()
-SET( Boost_USE_STATIC_LIBS ON )
+
+# Set Boost library linking based on STATIC_RUNTIME setting
+if(DEFINED STATIC_RUNTIME AND STATIC_RUNTIME)
+    SET(Boost_USE_STATIC_LIBS ON)
+else()
+    SET(Boost_USE_STATIC_LIBS OFF)
+endif()
+
 find_package(Boost COMPONENTS unit_test_framework system filesystem)
 #if boost is found enable tests
 IF(Boost_FOUND)
