@@ -42,9 +42,13 @@ jobs:
       -  name: Inspector
          run: C:/licensecc/bin/test/lccinspector.exe
          shell: bash
-      - name: On Failure print logs
-        if: ${{ failure() }}
-        run: |
-           type $env:temp/open-license.log
-
- 
+      -  name: On Failure print logs
+         if: ${{ failure() }}
+         shell: pwsh
+         run: |
+            $logPath = "$env:TEMP\open-license.log"
+            if (Test-Path $logPath) {
+               Get-Content $logPath
+            } else {
+               Write-Host "Log file not found: $logPath"
+            }
