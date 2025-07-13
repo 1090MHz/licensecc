@@ -1,6 +1,7 @@
 name: Github_CI
 on:
-   push: 
+  push:
+  workflow_dispatch:
 jobs:
    build-windows:
       runs-on: ${{ matrix.os }}
