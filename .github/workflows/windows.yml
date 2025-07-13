@@ -9,7 +9,7 @@ jobs:
         fail-fast: false
         matrix:
           build_type: ["Debug", "Release"]
-          os: ["windows-2019", "windows-2016"]
+          os: ["windows-2022", "windows-latest"]
           static: ["true","false"]
 
       steps:
@@ -17,17 +17,10 @@ jobs:
       -  name: Setup 
          shell: bash
          run: env
-      -  name: install boost boost-msvc-14.2
+      -  name: install boost
          shell: bash
-         if: ${{ matrix.os == 'windows-2019' }}
          run: |
-            choco install -y boost-msvc-14.2 --version 1.74.0
-            echo "BOOST_ROOT=C:/local/boost_1_74_0" >> $GITHUB_ENV
-      -  name: install boost boost-msvc-14.1
-         shell: bash
-         if: ${{ matrix.os == 'windows-2016' }}
-         run: |
-            choco install -y boost-msvc-14.1 --version 1.74.0
+            choco install -y boost-msvc-14.3 --version 1.74.0
             echo "BOOST_ROOT=C:/local/boost_1_74_0" >> $GITHUB_ENV     
       -  name: Compile
          run: |
