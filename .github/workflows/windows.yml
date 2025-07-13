@@ -23,7 +23,9 @@ jobs:
           static: ["true","false"]
 
       steps:
-      -  uses: actions/checkout@v1
+      -  uses: actions/checkout@v4
+         with:
+           submodules: recursive
       -  name: Setup 
          shell: bash
          run: env
