@@ -1,5 +1,4 @@
-[submodule "license-generator"]
-	path = extern/license-generator
+[submodule "lcc-license-generator"]
+	path = lcc-license-generator
 	url = https://github.com/1090MHz/lcc-license-generator.git
-	branch = .
-	ignore = all
+	branch = fix-boost-compatibility
