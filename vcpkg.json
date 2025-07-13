@@ -10,5 +10,5 @@
     "boost-test",
     "openssl"
   ],
-  "builtin-baseline": "2024.07.12"
+  "builtin-baseline": "efcfaaf60d7ec57a159fc3110403d939bfb69729"
 }

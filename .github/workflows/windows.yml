@@ -47,15 +47,6 @@ jobs:
         echo "VCPKG_ROOT=C:\opt\vcpkg" >> $env:GITHUB_ENV
       shell: pwsh
 
-    - name: Install dependencies via vcpkg
-      run: |
-        if ("${{ matrix.static }}" -eq "true") {
-          C:\opt\vcpkg\vcpkg.exe install boost:x64-windows-static openssl:x64-windows-static
-        } else {
-          C:\opt\vcpkg\vcpkg.exe install boost:x64-windows openssl:x64-windows
-        }
-      shell: pwsh
-
     - name: Configure CMake
       run: |
         if [ "${{ matrix.static }}" == "true" ]; then
