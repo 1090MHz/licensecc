@@ -1,54 +1,102 @@
 name: Github_CI
+
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
-jobs:
-   build-windows:
-      runs-on: ${{ matrix.os }}
-      strategy:
-        fail-fast: false
-        matrix:
-          build_type: ["Debug", "Release"]
-          os: ["windows-2025"]
-          static: ["true","false"]
 
-      steps:
-      -  uses: actions/checkout@v1
-      -  name: Setup 
-         shell: bash
-         run: env
-      -  name: install boost
-         shell: bash
-         run: |
-            choco install -y boost-msvc-14.3 --version 1.87.0
-            echo "BOOST_ROOT=C:/local/boost_1_87_0" >> $GITHUB_ENV     
-      -  name: Compile
-         run: |
-            cd build
-            cmake .. -A x64 -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DSTATIC_RUNTIME:BOOL=${{matrix.static}} -DLCC_PROJECT_NAME:STRING=test -DCMAKE_INSTALL_PREFIX=C:/licensecc
-            cmake --build . --target install --config ${{ matrix.build_type }}
-         shell: bash
-      -  name: Test
-         run: |
-            cd build 
-            ctest -C ${{ matrix.build_type }}
-         shell: bash
-         env:
-            CTEST_OUTPUT_ON_FAILURE: 1
-            VIRTUAL_ENV: VM
-      -  name: Inspector
-         run: C:/licensecc/bin/test/lccinspector.exe
-         shell: bash
-      -  name: On Failure print logs
-         if: ${{ failure() }}
-         shell: pwsh
-         run: |
-            $logPath = "$env:TEMP\open-license.log"
-            if (Test-Path $logPath) {
-               Get-Content $logPath
-            } else {
-               Write-Host "Log file not found: $logPath"
-            }
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: ["Debug", "Release"]
+        os: ["windows-2025"]
+        static: ["true", "false"]
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Setup environment
+      shell: bash
+      run: env
+
+    - name: Cache vcpkg
+      uses: actions/cache@v4
+      with:
+        path: |
+          C:/opt/vcpkg/installed
+        key: vcpkg-${{ runner.os }}-${{ matrix.static }}-${{ hashFiles('**/vcpkg.json') }}
+        restore-keys: |
+          vcpkg-${{ runner.os }}-${{ matrix.static }}-
+          vcpkg-${{ runner.os }}-
+
+    - name: Clone and bootstrap vcpkg
+      run: |
+        if (-not (Test-Path "C:\opt")) { New-Item -ItemType Directory -Path "C:\opt" }
+        if (-not (Test-Path "C:\opt\vcpkg")) {
+          Set-Location "C:\opt"
+          git clone https://github.com/microsoft/vcpkg.git
+          Set-Location vcpkg
+          git checkout 09b8d93e613ba1c0309cf3ab358242d33af634dc
+          .\bootstrap-vcpkg.bat
+        }
+        echo "VCPKG_ROOT=C:\opt\vcpkg" >> $env:GITHUB_ENV
+      shell: pwsh
+
+    - name: Configure CMake
+      run: |
+        if [ "${{ matrix.static }}" == "true" ]; then
+          cmake --preset vcpkg-static
+        else
+          cmake --preset vcpkg-dynamic
+        fi
+      shell: bash
+
+    - name: Build and install
+      run: |
+        if [ "${{ matrix.static }}" == "true" ]; then
+          cmake --build build --config ${{ matrix.build_type }}
+        else
+          cmake --build build-dynamic --config ${{ matrix.build_type }}
+        fi
+      shell: bash
+
+    - name: Run tests
+      run: |
+        if [ "${{ matrix.static }}" == "true" ]; then
+          cd build
+        else
+          cd build-dynamic
+        fi
+        ctest -C ${{ matrix.build_type }} --output-on-failure
+      shell: bash
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+
+    - name: Inspector
+      run: |
+        if [ "${{ matrix.static }}" == "true" ]; then
+          ./build/src/inspector/${{ matrix.build_type }}/lccinspector.exe
+        else
+          ./build-dynamic/src/inspector/${{ matrix.build_type }}/lccinspector.exe
+        fi
+      shell: bash
+
+    - name: On Failure print logs
+      if: ${{ failure() }}
+      shell: pwsh
+      run: |
+        $logPath = "$env:TEMP\open-license.log"
+        if (Test-Path $logPath) {
+          Get-Content $logPath
+        } else {
+          Write-Host "Log file not found: $logPath"
+        }

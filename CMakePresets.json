@@ -24,7 +24,7 @@
         {
             "name": "vcpkg-dynamic",
             "displayName": "vcpkg Dynamic Libraries",
-            "description": "Configure with vcpkg dynamic libraries",
+            "description": "Configure with vcpkg dynamic libraries and dynamic MSVC runtime",
             "generator": "Visual Studio 17 2022",
             "architecture": "x64",
             "binaryDir": "${sourceDir}/build-dynamic",

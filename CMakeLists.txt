@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 SET(LICENSECC_SHORT_LICENSE "BSD Software License")
 
@@ -27,9 +27,20 @@ project (licensecc
 			LANGUAGES CXX)
 set(PROJECT_DESCRIPTION "Copy protection and licensing library")
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
+
+# Set MSVC runtime library globally before any targets are created
+if(MSVC)
+    if(DEFINED STATIC_RUNTIME AND STATIC_RUNTIME)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        message(STATUS "Using static MSVC runtime library")
+    else()
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL") 
+        message(STATUS "Using dynamic MSVC runtime library")
+    endif()
+endif()
 
 #find lccgen executable or build it.
 find_package(lccgen REQUIRED) 
@@ -39,10 +50,14 @@ IF( ( CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" ) AND CMAKE_CROSSCOMPILING AND NOT
 	SET(CMAKE_CROSSCOMPILING_EMULATOR "wine")	
 ENDIF()
 
-SET (OPENSSL_USE_STATIC_LIBS TRUE)
-IF(${STATIC_RUNTIME})
-	SET(OPENSSL_MSVC_STATIC_RT TRUE)
-ENDIF(${STATIC_RUNTIME})
+# Set OpenSSL linking based on STATIC_RUNTIME setting
+if(DEFINED STATIC_RUNTIME AND STATIC_RUNTIME)
+    SET (OPENSSL_USE_STATIC_LIBS TRUE)
+    SET(OPENSSL_MSVC_STATIC_RT TRUE)
+else()
+    SET (OPENSSL_USE_STATIC_LIBS FALSE)
+    SET(OPENSSL_MSVC_STATIC_RT FALSE)
+endif()
 find_package(OpenSSL COMPONENTS Crypto QUIET)
 IF(OPENSSL_FOUND)
 	MESSAGE(STATUS "Found openssl version ${OPENSSL_VERSION} -licensecc")
@@ -88,12 +103,9 @@ else(UNIX)
 		include(target_arch)
 		target_architecture( TARGET_ARCHITECTURE )
 		message(STATUS "architecture detected: ${TARGET_ARCHITECTURE}")
-		#cmake > 3.15 handle the /MD flag more nicely than this
+		# Modern CMake (3.15+) handles runtime library via CMAKE_MSVC_RUNTIME_LIBRARY
+		# Set Boost to use static runtime if we're using static runtime
 		if(STATIC_RUNTIME)
-		    message(STATUS "Static runtime ${STATIC_RUNTIME}")
-			string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
-			string(REPLACE "/MDd" "/MTd" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-			#list(APPEND CMAKE_CXX_FLAGS_DEBUG "/MTd")
 			SET(Boost_USE_STATIC_RUNTIME ON)
 		endif(STATIC_RUNTIME)
 		add_definitions("/D _CRT_SECURE_NO_WARNINGS")
@@ -147,7 +159,14 @@ if(WIN32 AND "x${CMAKE_CXX_COMPILER_ARCHITECTURE_ID}" STREQUAL "x")
     endif()
 	    message(STATUS "Compiler architecture: ${CMAKE_CXX_COMPILER_ARCHITECTURE_ID}")
 endif()
-SET( Boost_USE_STATIC_LIBS ON )
+
+# Set Boost library linking based on STATIC_RUNTIME setting
+if(DEFINED STATIC_RUNTIME AND STATIC_RUNTIME)
+    SET(Boost_USE_STATIC_LIBS ON)
+else()
+    SET(Boost_USE_STATIC_LIBS OFF)
+endif()
+
 find_package(Boost COMPONENTS unit_test_framework system filesystem)
 #if boost is found enable tests
 IF(Boost_FOUND)

@@ -1,0 +1,14 @@
+{
+  "name": "licensecc",
+  "version": "2.1.0",
+  "description": "License manager and generator",
+  "dependencies": [
+    "boost-date-time",
+    "boost-filesystem", 
+    "boost-program-options",
+    "boost-system",
+    "boost-test",
+    "openssl"
+  ],
+  "builtin-baseline": "09b8d93e613ba1c0309cf3ab358242d33af634dc"
+}
