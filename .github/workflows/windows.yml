@@ -23,8 +23,8 @@ jobs:
       -  name: install boost
          shell: bash
          run: |
-            choco install -y boost-msvc-14.3 --version 1.74.0
-            echo "BOOST_ROOT=C:/local/boost_1_74_0" >> $GITHUB_ENV     
+            choco install -y boost-msvc-14.3 --version 1.87.0
+            echo "BOOST_ROOT=C:/local/boost_1_87_0" >> $GITHUB_ENV     
       -  name: Compile
          run: |
             cd build
