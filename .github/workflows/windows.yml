@@ -1,7 +1,8 @@
+
 name: Github_CI
+
+# Trigger only on pull requests to main; avoids duplicate runs caused by push after merge
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
