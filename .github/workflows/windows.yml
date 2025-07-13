@@ -34,6 +34,9 @@ jobs:
         path: |
           C:/opt/vcpkg/installed
         key: vcpkg-${{ runner.os }}-${{ matrix.static }}-${{ hashFiles('**/vcpkg.json') }}
+        restore-keys: |
+          vcpkg-${{ runner.os }}-${{ matrix.static }}-
+          vcpkg-${{ runner.os }}-
 
     - name: Clone and bootstrap vcpkg
       run: |
@@ -42,6 +45,7 @@ jobs:
           Set-Location "C:\opt"
           git clone https://github.com/microsoft/vcpkg.git
           Set-Location vcpkg
+          git checkout 09b8d93e613ba1c0309cf3ab358242d33af634dc
           .\bootstrap-vcpkg.bat
         }
         echo "VCPKG_ROOT=C:\opt\vcpkg" >> $env:GITHUB_ENV
