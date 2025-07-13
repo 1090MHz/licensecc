@@ -78,7 +78,12 @@ jobs:
         CTEST_OUTPUT_ON_FAILURE: 1
 
     - name: Inspector
-      run: C:/licensecc/bin/test/lccinspector.exe
+      run: |
+        if [ "${{ matrix.static }}" == "true" ]; then
+          ./build/src/inspector/${{ matrix.build_type }}/lccinspector.exe
+        else
+          ./build-dynamic/src/inspector/${{ matrix.build_type }}/lccinspector.exe
+        fi
       shell: bash
 
     - name: On Failure print logs
