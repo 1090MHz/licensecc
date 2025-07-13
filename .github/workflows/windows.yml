@@ -32,45 +32,59 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
-          ~/.cache/vcpkg/archives
-        key: vcpkg-${{ runner.os }}-${{ matrix.build_type }}-${{ matrix.static }}-boost-1.87.0
+          C:/opt/vcpkg/installed
+        key: vcpkg-${{ runner.os }}-${{ matrix.static }}-${{ hashFiles('**/vcpkg.json') }}
 
     - name: Clone and bootstrap vcpkg
       run: |
-        git clone https://github.com/microsoft/vcpkg.git
-        ./vcpkg/bootstrap-vcpkg.bat
+        if not exist "C:\opt" mkdir "C:\opt"
+        if not exist "C:\opt\vcpkg" (
+          cd "C:\opt"
+          git clone https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          .\bootstrap-vcpkg.bat
+        )
+        echo "VCPKG_ROOT=C:\opt\vcpkg" >> %GITHUB_ENV%
+      shell: cmd
 
-    - name: Install Boost via vcpkg
+    - name: Install dependencies via vcpkg
       run: |
-        ./vcpkg/vcpkg install boost:x64-windows
+        if "${{ matrix.static }}" == "true" (
+          C:\opt\vcpkg\vcpkg.exe install boost:x64-windows-static openssl:x64-windows-static
+        ) else (
+          C:\opt\vcpkg\vcpkg.exe install boost:x64-windows openssl:x64-windows
+        )
       shell: cmd
 
     - name: Configure CMake
       run: |
-        mkdir -p build
-        cd build
-        cmake .. -A x64 \
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-          -DSTATIC_RUNTIME:BOOL=${{ matrix.static }} \
-          -DLCC_PROJECT_NAME:STRING=test \
-          -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake \
-          -DCMAKE_INSTALL_PREFIX=C:/licensecc
+        if [ "${{ matrix.static }}" == "true" ]; then
+          cmake --preset vcpkg-static
+        else
+          cmake --preset vcpkg-dynamic
+        fi
       shell: bash
 
     - name: Build and install
       run: |
-        cd build
-        cmake --build . --target install --config ${{ matrix.build_type }}
+        if [ "${{ matrix.static }}" == "true" ]; then
+          cmake --build build --config ${{ matrix.build_type }}
+        else
+          cmake --build build-dynamic --config ${{ matrix.build_type }}
+        fi
       shell: bash
 
     - name: Run tests
       run: |
-        cd build
-        ctest -C ${{ matrix.build_type }}
+        if [ "${{ matrix.static }}" == "true" ]; then
+          cd build
+        else
+          cd build-dynamic
+        fi
+        ctest -C ${{ matrix.build_type }} --output-on-failure
       shell: bash
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
-        VIRTUAL_ENV: VM
 
     - name: Inspector
       run: C:/licensecc/bin/test/lccinspector.exe
