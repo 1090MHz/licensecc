@@ -31,6 +31,17 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
+# Set MSVC runtime library globally before any targets are created
+if(MSVC)
+    if(DEFINED STATIC_RUNTIME AND STATIC_RUNTIME)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        message(STATUS "Using static MSVC runtime library")
+    else()
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL") 
+        message(STATUS "Using dynamic MSVC runtime library")
+    endif()
+endif()
+
 #find lccgen executable or build it.
 find_package(lccgen REQUIRED) 
 
