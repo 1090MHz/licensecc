@@ -1,63 +1,88 @@
-
 name: Github_CI
 
-# Trigger only on pull requests to main; avoids duplicate runs caused by push after merge
 on:
   pull_request:
     branches: [main]
   workflow_dispatch:
 
-# Ensure only the latest run is active
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-   build-windows:
-      runs-on: ${{ matrix.os }}
-      strategy:
-        fail-fast: false
-        matrix:
-          build_type: ["Debug", "Release"]
-          os: ["windows-2025"]
-          static: ["true","false"]
+  build-windows:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: ["Debug", "Release"]
+        os: ["windows-2025"]
+        static: ["true", "false"]
 
-      steps:
-      -  uses: actions/checkout@v4
-         with:
-           submodules: recursive
-      -  name: Setup 
-         shell: bash
-         run: env
-      -  name: install boost
-         shell: bash
-         run: |
-            choco install -y boost-msvc-14.3 --version 1.87.0
-            echo "BOOST_ROOT=C:/local/boost_1_87_0" >> $GITHUB_ENV     
-      -  name: Compile
-         run: |
-            cd build
-            cmake .. -A x64 -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DSTATIC_RUNTIME:BOOL=${{matrix.static}} -DLCC_PROJECT_NAME:STRING=test -DCMAKE_INSTALL_PREFIX=C:/licensecc
-            cmake --build . --target install --config ${{ matrix.build_type }}
-         shell: bash
-      -  name: Test
-         run: |
-            cd build 
-            ctest -C ${{ matrix.build_type }}
-         shell: bash
-         env:
-            CTEST_OUTPUT_ON_FAILURE: 1
-            VIRTUAL_ENV: VM
-      -  name: Inspector
-         run: C:/licensecc/bin/test/lccinspector.exe
-         shell: bash
-      -  name: On Failure print logs
-         if: ${{ failure() }}
-         shell: pwsh
-         run: |
-            $logPath = "$env:TEMP\open-license.log"
-            if (Test-Path $logPath) {
-               Get-Content $logPath
-            } else {
-               Write-Host "Log file not found: $logPath"
-            }
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Setup environment
+      shell: bash
+      run: env
+
+    - name: Cache vcpkg
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/vcpkg/archives
+        key: vcpkg-${{ runner.os }}-${{ matrix.build_type }}-${{ matrix.static }}-boost-1.87.0
+
+    - name: Clone and bootstrap vcpkg
+      run: |
+        git clone https://github.com/microsoft/vcpkg.git
+        ./vcpkg/bootstrap-vcpkg.bat
+
+    - name: Install Boost via vcpkg
+      run: |
+        ./vcpkg/vcpkg install boost:x64-windows
+      shell: cmd
+
+    - name: Configure CMake
+      run: |
+        mkdir -p build
+        cd build
+        cmake .. -A x64 \
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          -DSTATIC_RUNTIME:BOOL=${{ matrix.static }} \
+          -DLCC_PROJECT_NAME:STRING=test \
+          -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake \
+          -DCMAKE_INSTALL_PREFIX=C:/licensecc
+      shell: bash
+
+    - name: Build and install
+      run: |
+        cd build
+        cmake --build . --target install --config ${{ matrix.build_type }}
+      shell: bash
+
+    - name: Run tests
+      run: |
+        cd build
+        ctest -C ${{ matrix.build_type }}
+      shell: bash
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+        VIRTUAL_ENV: VM
+
+    - name: Inspector
+      run: C:/licensecc/bin/test/lccinspector.exe
+      shell: bash
+
+    - name: On Failure print logs
+      if: ${{ failure() }}
+      shell: pwsh
+      run: |
+        $logPath = "$env:TEMP\open-license.log"
+        if (Test-Path $logPath) {
+          Get-Content $logPath
+        } else {
+          Write-Host "Log file not found: $logPath"
+        }
