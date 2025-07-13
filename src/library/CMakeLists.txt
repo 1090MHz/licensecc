@@ -14,6 +14,9 @@ ADD_LIBRARY(licensecc_static STATIC
     $<TARGET_OBJECTS:base>
 )
 
+# Ensure public_key.h is generated before compiling the library
+add_dependencies(licensecc_static project_initialize)
+
 if(CODE_COVERAGE AND UNIX)
 	  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
 	    target_link_options(licensecc_static PUBLIC --coverage)
