@@ -1,6 +1,9 @@
 name: Github_CI
 on:
   push:
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 jobs:
    build-windows:
@@ -9,7 +12,7 @@ jobs:
         fail-fast: false
         matrix:
           build_type: ["Debug", "Release"]
-          os: ["windows-2019", "windows-2016"]
+          os: ["windows-2025"]
           static: ["true","false"]
 
       steps:
@@ -17,18 +20,11 @@ jobs:
       -  name: Setup 
          shell: bash
          run: env
-      -  name: install boost boost-msvc-14.2
+      -  name: install boost
          shell: bash
-         if: ${{ matrix.os == 'windows-2019' }}
          run: |
-            choco install -y boost-msvc-14.2 --version 1.74.0
-            echo "BOOST_ROOT=C:/local/boost_1_74_0" >> $GITHUB_ENV
-      -  name: install boost boost-msvc-14.1
-         shell: bash
-         if: ${{ matrix.os == 'windows-2016' }}
-         run: |
-            choco install -y boost-msvc-14.1 --version 1.74.0
-            echo "BOOST_ROOT=C:/local/boost_1_74_0" >> $GITHUB_ENV     
+            choco install -y boost-msvc-14.3 --version 1.87.0
+            echo "BOOST_ROOT=C:/local/boost_1_87_0" >> $GITHUB_ENV     
       -  name: Compile
          run: |
             cd build
@@ -46,9 +42,13 @@ jobs:
       -  name: Inspector
          run: C:/licensecc/bin/test/lccinspector.exe
          shell: bash
-      - name: On Failure print logs
-        if: ${{ failure() }}
-        run: |
-           type $env:temp/open-license.log
-
- 
+      -  name: On Failure print logs
+         if: ${{ failure() }}
+         shell: pwsh
+         run: |
+            $logPath = "$env:TEMP\open-license.log"
+            if (Test-Path $logPath) {
+               Get-Content $logPath
+            } else {
+               Write-Host "Log file not found: $logPath"
+            }
