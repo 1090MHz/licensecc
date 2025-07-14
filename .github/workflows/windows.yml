@@ -33,7 +33,9 @@ jobs:
       with:
         path: |
           C:/opt/vcpkg/installed
-        key: vcpkg-${{ runner.os }}-${{ matrix.static }}-${{ hashFiles('**/vcpkg.json') }}
+          C:/opt/vcpkg/packages
+          C:/opt/vcpkg/buildtrees
+        key: vcpkg-${{ runner.os }}-${{ matrix.static }}-${{ hashFiles('vcpkg.json', 'CMakePresets.json') }}-v2
         restore-keys: |
           vcpkg-${{ runner.os }}-${{ matrix.static }}-
           vcpkg-${{ runner.os }}-
@@ -47,6 +49,8 @@ jobs:
           Set-Location vcpkg
           git checkout 09b8d93e613ba1c0309cf3ab358242d33af634dc
           .\bootstrap-vcpkg.bat
+        } else {
+          Write-Host "vcpkg already exists, skipping clone and bootstrap"
         }
         echo "VCPKG_ROOT=C:\opt\vcpkg" >> $env:GITHUB_ENV
       shell: pwsh
