@@ -28,17 +28,13 @@ jobs:
       shell: bash
       run: env
 
-    - name: Cache vcpkg
+    - name: Cache vcpkg repo
       uses: actions/cache@v4
       with:
-        path: |
-          C:/opt/vcpkg/installed
-          C:/opt/vcpkg/packages
-          C:/opt/vcpkg/buildtrees
-        key: vcpkg-${{ runner.os }}-${{ matrix.static }}-${{ hashFiles('vcpkg.json', 'CMakePresets.json') }}-v2
+        path: C:/opt/vcpkg
+        key: vcpkg-repo-${{ runner.os }}-09b8d93e613ba1c0309cf3ab358242d33af634dc
         restore-keys: |
-          vcpkg-${{ runner.os }}-${{ matrix.static }}-
-          vcpkg-${{ runner.os }}-
+          vcpkg-repo-${{ runner.os }}-
 
     - name: Clone and bootstrap vcpkg
       run: |
@@ -54,6 +50,18 @@ jobs:
         }
         echo "VCPKG_ROOT=C:\opt\vcpkg" >> $env:GITHUB_ENV
       shell: pwsh
+
+    - name: Cache vcpkg packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          C:/opt/vcpkg/installed
+          C:/opt/vcpkg/packages
+          C:/opt/vcpkg/buildtrees
+        key: vcpkg-packages-${{ runner.os }}-${{ matrix.static }}-${{ hashFiles('vcpkg.json') }}-v3
+        restore-keys: |
+          vcpkg-packages-${{ runner.os }}-${{ matrix.static }}-
+          vcpkg-packages-${{ runner.os }}-
 
     - name: Configure CMake
       run: |
