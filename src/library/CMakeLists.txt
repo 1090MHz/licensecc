@@ -26,9 +26,6 @@ endif(CODE_COVERAGE AND UNIX)
 
 define_property(TARGET PROPERTY WITH_OPENSSL BRIEF_DOCS "need openssl to compile" FULL_DOCS "ff")
 
-# Define SI_SUPPORT_IOSTREAMS consistently via compiler flags to avoid ODR violations
-target_compile_definitions(licensecc_static PRIVATE SI_SUPPORT_IOSTREAMS)
-
 IF(UNIX OR OPENSSL_FOUND)
 	target_compile_definitions(licensecc_static PUBLIC HAS_OPENSSL)
 	set_target_properties(licensecc_static PROPERTIES WITH_OPENSSL 1)
