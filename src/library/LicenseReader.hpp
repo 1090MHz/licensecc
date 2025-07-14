@@ -10,7 +10,6 @@
 #include <string>
 #include <ctime>
 
-#define SI_SUPPORT_IOSTREAMS
 #include <licensecc/datatypes.h>
 
 #include "base/EventRegistry.h"
