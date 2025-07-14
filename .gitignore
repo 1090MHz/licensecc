@@ -39,3 +39,11 @@ projects/*
 /.venv/
 /Pipfile
 /.pydevproject
+
+build-dynamic/*
+vcpkg_installed/*
+
+# VS Code user settings (keep c_cpp_properties.json for shared IntelliSense config)
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
