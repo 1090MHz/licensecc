@@ -43,22 +43,27 @@ BOOST_AUTO_TEST_CASE(read_license_near_module) {
 	bool exeFileFound = false;
 	string referenceExeFileName;
 	string referenceLicenseFileName;
-	// Verify we're pointing the correct executable, in windows isn't clear where it's built
+	
+	// Get current configuration (Debug/Release/etc.)
+	string config = "";
+#ifdef _DEBUG
+	config = "Debug";
+#else
+	config = "Release";
+#endif
+
+	// Build configuration-aware path to executable
 #ifdef _WIN32
-	boost::optional<path> exeLocation(find_file(path(testExeFolder), path(BOOST_TEST_MODULE ".exe")));
-	exeFileFound = exeLocation.has_value();
-	if (exeFileFound) {
-		referenceExeFileName = exeLocation.get().string();
-		referenceLicenseFileName =
-			referenceExeFileName.replace(referenceExeFileName.find(BOOST_TEST_MODULE ".exe"),
-										 string(BOOST_TEST_MODULE ".exe").size(), BOOST_TEST_MODULE ".lic");
-	}
+	referenceExeFileName = testExeFolder + "/" + config + "/" + BOOST_TEST_MODULE ".exe";
+	referenceLicenseFileName = testExeFolder + "/" + config + "/" + BOOST_TEST_MODULE ".lic";
 #else
 	referenceExeFileName = testExeFolder + "/" + BOOST_TEST_MODULE;
-	std::ifstream f(referenceExeFileName.c_str());
-	exeFileFound = f.good();
 	referenceLicenseFileName = testExeFolder + "/" + BOOST_TEST_MODULE ".lic";
 #endif
+	
+	// Check if executable exists
+	std::ifstream f(referenceExeFileName.c_str());
+	exeFileFound = f.good();
 	BOOST_WARN_MESSAGE(!exeFileFound, "File [" + referenceExeFileName + "] NOT found");
 	if (exeFileFound) {
 		// copy test license near module
