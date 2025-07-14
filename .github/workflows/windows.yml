@@ -35,6 +35,7 @@ jobs:
         key: vcpkg-${{ runner.os }}-${{ matrix.static }}-${{ hashFiles('vcpkg.json') }}-09b8d93e613ba1c0309cf3ab358242d33af634dc-v8
         restore-keys: |
           vcpkg-${{ runner.os }}-${{ matrix.static }}-${{ hashFiles('vcpkg.json') }}-09b8d93e613ba1c0309cf3ab358242d33af634dc-
+          vcpkg-${{ runner.os }}-${{ matrix.static }}-${{ hashFiles('vcpkg.json') }}-
           vcpkg-${{ runner.os }}-${{ matrix.static }}-
           vcpkg-${{ runner.os }}-
 
@@ -51,6 +52,11 @@ jobs:
           Write-Host "vcpkg already exists, skipping clone and bootstrap"
         }
         echo "VCPKG_ROOT=C:\opt\vcpkg" >> $env:GITHUB_ENV
+      shell: pwsh
+
+    - name: Install vcpkg dependencies
+      run: |
+        C:\opt\vcpkg\vcpkg.exe install --triplet=x64-windows${{ matrix.static == 'true' && '-static' || '' }} --recurse
       shell: pwsh
 
     - name: Configure CMake
